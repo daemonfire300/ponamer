@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env::args};
+use std::env::args;
 
 use rand::{rngs::StdRng, SeedableRng};
 
