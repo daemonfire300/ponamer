@@ -43,6 +43,9 @@ fn parse_args(args: &Vec<String>) -> Op {
         return Op::Invalid;
     }
     let val = if let Some(val) = args.get(2) {
+        if val.len() == 0 {
+            return Op::Invalid;
+        }
         val
     } else {
         return Op::Invalid;
@@ -54,5 +57,34 @@ fn parse_args(args: &Vec<String>) -> Op {
             _ => Op::Invalid,
         },
         None => Op::Invalid,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn parse_args_add_ok() {
+        let name = "name";
+        let args: Vec<String> = vec!["".to_string(), "add".to_string(), name.to_string()];
+        match parse_args(&args) {
+            Op::Add(op_arg) => assert!(
+                name == op_arg,
+                "operation arg does not match expected value"
+            ),
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn parse_args_add_invalid() {
+        let name = "";
+        let args: Vec<String> = vec!["".to_string(), "add".to_string(), name.to_string()];
+        match parse_args(&args) {
+            Op::Invalid => assert!(true),
+            _ => assert!(false, "no valid operation should result from empty arg"),
+        }
     }
 }
