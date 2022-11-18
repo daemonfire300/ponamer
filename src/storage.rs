@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
-    fs::{read_to_string, File},
-    io::Write,
+    fs::File,
+    io::{Read, Write},
 };
 
 #[derive(Debug)]
@@ -11,7 +11,14 @@ pub struct FileStore {
 
 impl FileStore {
     pub fn load(path: &str) -> Self {
-        let contents = read_to_string(path).unwrap();
+        let mut file = File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(path)
+            .unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
         let code_names = HashMap::<String, String>::new();
         let res = contents.lines().map(|line| line.split(',')).fold(
             code_names,
@@ -33,17 +40,22 @@ impl FileStore {
             .create(true)
             .open(path)?;
         for (k, v) in self.code_names.iter() {
-            write!(f, "{},{}", k, v)?;
+            write!(f, "{},{}\n", k, v)?;
         }
         Ok(())
     }
 
-    pub fn add(&mut self, name: String, code_name: String) -> Option<bool> {
-        self.code_names.entry(name).or_insert(code_name);
+    pub fn add(&mut self, name: &str, code_name: &str) -> Option<bool> {
+        self.code_names
+            .entry(name.to_string())
+            .or_insert(code_name.to_string());
         Some(false)
     }
 
-    pub fn get(&mut self, name: String, code_name: String) -> Option<&str> {
-        let out = self.code_names.get(name).map(|e| e.as_str());
+    pub fn get(&mut self, name: &str) -> Option<&str> {
+        match self.code_names.get(name) {
+            Some(val) => Some(val.as_str()),
+            _ => None,
+        }
     }
 }
