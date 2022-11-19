@@ -1,8 +1,22 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::{Read, Write},
+    io::{read_to_string, Read, Write},
 };
+
+pub fn load_obfuscation_elements_from_file(path: &str) -> Option<Vec<String>> {
+    let file = match File::open(path) {
+        Ok(f) => f,
+        Err(_) => return None,
+    };
+    let contents = if let Ok(contents) = read_to_string(file) {
+        contents
+    } else {
+        return None;
+    };
+    let out: Vec<String> = contents.lines().map(|l| l.to_owned()).collect();
+    return Some(out);
+}
 
 #[derive(Debug)]
 pub struct FileStore {

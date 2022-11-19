@@ -6,12 +6,39 @@ mod gen;
 mod storage;
 
 const DEFAULT_FILE_PATH: &'static str = "./names.dat";
+const DEFAULT_OBFUSCATION_SUBJECTS_FILE: &'static str = "./subjects.dat";
+const DEFAULT_OBFUSCATION_ADJECTIVES_FILE: &'static str = "./adjectives.dat";
 
 fn main() {
     let vec: Vec<String> = args().collect();
+    let subjects = if let Some(s) =
+        storage::load_obfuscation_elements_from_file(DEFAULT_OBFUSCATION_SUBJECTS_FILE)
+    {
+        s
+    } else {
+        vec![
+            "donkey".to_string(),
+            "cucumber".to_string(),
+            "fish".to_string(),
+            "skyscraper".to_string(),
+        ]
+    };
+    let adjectives = if let Some(a) =
+        storage::load_obfuscation_elements_from_file(DEFAULT_OBFUSCATION_ADJECTIVES_FILE)
+    {
+        a
+    } else {
+        vec![
+            "tall".to_string(),
+            "small".to_string(),
+            "wide".to_string(),
+            "funky".to_string(),
+            "crazy".to_string(),
+        ]
+    };
     let mut obf = gen::Obfuscator {
-        subjects: vec!["donkey", "cucumber", "fish", "skyscraper"],
-        adjectives: vec!["tall", "small", "wide", "funky", "crazy"],
+        subjects: subjects.iter().map(|e| e.as_str()).collect(),
+        adjectives: adjectives.iter().map(|e| e.as_str()).collect(),
         rng: &mut StdRng::from_entropy(),
     };
     let mut store = storage::FileStore::load(DEFAULT_FILE_PATH);
