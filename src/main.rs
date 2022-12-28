@@ -6,6 +6,7 @@ mod gen;
 mod storage;
 
 const DEFAULT_FILE_PATH: &'static str = "./names.dat";
+const DEFAULT_SQLITE_PATH: &'static str = "./names.db";
 const DEFAULT_OBFUSCATION_SUBJECTS_FILE: &'static str = "./subjects.dat";
 const DEFAULT_OBFUSCATION_ADJECTIVES_FILE: &'static str = "./adjectives.dat";
 
@@ -42,11 +43,13 @@ fn main() {
         rng: &mut StdRng::from_entropy(),
     };
     let mut store = storage::FileStore::load(DEFAULT_FILE_PATH);
+    let mut sql_store = storage::SqlLiteStore::load(DEFAULT_FILE_PATH);
     let op = parse_args(&vec);
     match op {
         Op::Add(name) => {
             let code_name = obf.obfuscate();
             store.add(&name.to_string(), &code_name);
+            sql_store.add(&name.to_string(), &code_name);
             println!("{:?}: {} --> {}", op, name, code_name);
             store.save(DEFAULT_FILE_PATH).unwrap();
         }

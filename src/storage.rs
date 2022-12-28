@@ -4,6 +4,8 @@ use std::{
     io::{read_to_string, Read, Write},
 };
 
+use rusqlite::{params, Connection};
+
 pub fn load_obfuscation_elements_from_file(path: &str) -> Option<Vec<String>> {
     let file = match File::open(path) {
         Ok(f) => f,
@@ -21,6 +23,77 @@ pub fn load_obfuscation_elements_from_file(path: &str) -> Option<Vec<String>> {
 #[derive(Debug)]
 pub struct FileStore {
     pub code_names: HashMap<String, String>,
+}
+
+pub struct SqlLiteStore {
+    conn: Connection,
+}
+
+impl SqlLiteStore {
+    pub fn load(path: &str) -> Self {
+        let res = Connection::open(path);
+        match res {
+            Ok(conn) => {
+                let mut s = Self { conn };
+                s.build_table();
+                s.build_indices();
+                return s;
+            }
+            Err(err) => panic!("{}", err),
+        }
+    }
+
+    fn build_table(&mut self) {
+        match self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS code_names(
+                        customer_name TEXT,
+                        code_name TEXT,
+)",
+            (),
+        ) {
+            Ok(_) => println!("Tables created..."),
+            Err(err) => println!("Creating tables failed: {}", err),
+        }
+    }
+
+    fn build_indices(&mut self) {
+        match self.conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_code_names ON code_names(
+                        code_name,
+)",
+            (),
+        ) {
+            Ok(_) => println!("Indices created..."),
+            Err(err) => println!("Creating indices failed: {}", err),
+        }
+    }
+
+    pub fn add(&mut self, name: &str, code_name: &str) -> Option<bool> {
+        match self.conn.execute(
+            "INSERT INTO code_names(customer_name,code_name) VALUES (?1,?2)
+                ON CONFLICT DO NOTHING
+            ",
+            params![name, code_name],
+        ) {
+            Ok(_) => Some(true),
+            Err(err) => {
+                println!("Failed to insert: {}", err);
+                None
+            }
+        }
+    }
+
+    pub fn get(&mut self, name: &str) -> Option<String> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT code_name FROM code_names WHERE customer_name = ?")
+            .unwrap();
+        let iter = stmt
+            .query_map(params![name], |row| Ok(row.get::<_, String>(0).unwrap()))
+            .unwrap();
+        let res = iter.into_iter().take(1).map(|e| e.unwrap()).last().unwrap();
+        Some(res)
+    }
 }
 
 impl FileStore {
