@@ -43,7 +43,7 @@ fn main() {
         rng: &mut StdRng::from_entropy(),
     };
     let mut store = storage::FileStore::load(DEFAULT_FILE_PATH);
-    let mut sql_store = storage::SqlLiteStore::load(DEFAULT_FILE_PATH);
+    let mut sql_store = storage::SqlLiteStore::load(DEFAULT_SQLITE_PATH);
     let op = parse_args(&vec);
     match op {
         Op::Add(name) => {
@@ -53,10 +53,16 @@ fn main() {
             println!("{:?}: {} --> {}", op, name, code_name);
             store.save(DEFAULT_FILE_PATH).unwrap();
         }
-        Op::Get(name) => match store.get(name) {
-            Some(code_name) => println!("{}", code_name),
-            None => println!("not found"),
-        },
+        Op::Get(name) => {
+            match sql_store.get(name) {
+                Some(code_name) => println!("{}", code_name),
+                None => println!("not found"),
+            };
+            match store.get(name) {
+                Some(code_name) => println!("{}", code_name),
+                None => println!("not found"),
+            };
+        }
         Op::Invalid => println!("no input given"),
     }
 }

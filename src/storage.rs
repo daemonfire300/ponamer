@@ -47,7 +47,7 @@ impl SqlLiteStore {
         match self.conn.execute(
             "CREATE TABLE IF NOT EXISTS code_names(
                         customer_name TEXT,
-                        code_name TEXT,
+                        code_name TEXT
 )",
             (),
         ) {
@@ -59,7 +59,7 @@ impl SqlLiteStore {
     fn build_indices(&mut self) {
         match self.conn.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_code_names ON code_names(
-                        code_name,
+                        code_name
 )",
             (),
         ) {
@@ -91,8 +91,7 @@ impl SqlLiteStore {
         let iter = stmt
             .query_map(params![name], |row| Ok(row.get::<_, String>(0).unwrap()))
             .unwrap();
-        let res = iter.into_iter().take(1).map(|e| e.unwrap()).last().unwrap();
-        Some(res)
+        iter.into_iter().take(1).map(|e| e.unwrap()).last()
     }
 }
 
